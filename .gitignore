@@ -1,0 +1,6 @@
+users.db
+*.db
+vendor/
+composer.lock
+.env
+.DS_Store
