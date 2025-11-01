@@ -38,7 +38,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <div class="container">
         <div class="auth-box">
             <div class="auth-header">
-                <h1>Welcome Back</h1>
+                <h1>Welcome Back To The Vibes</h1>
                 <p>Sign in to your account</p>
             </div>
             
