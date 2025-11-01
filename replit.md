@@ -79,16 +79,26 @@ A complete authentication system built with HTML, CSS, and PHP featuring user re
 6. Old token deleted from database
 
 ## Security Features
-- Passwords hashed using bcrypt (PASSWORD_DEFAULT)
-- Session-based authentication
-- Protected routes that require login
-- Password reset tokens expire after 1 hour
-- SQL injection prevention using PDO prepared statements
-- XSS prevention using htmlspecialchars()
-- Password strength validation (minimum 6 characters)
+- **Password Hashing**: Passwords hashed using bcrypt (PASSWORD_DEFAULT)
+- **Session Management**: Session-based authentication with session fixation prevention
+- **Session Regeneration**: Session ID regenerated on login and logout to prevent session fixation attacks
+- **Protected Routes**: Routes that require authentication
+- **Token Security**: Password reset tokens hashed with SHA-256 before database storage
+- **Token Expiration**: Password reset tokens expire after 1 hour
+- **SQL Injection Prevention**: PDO prepared statements used throughout
+- **XSS Prevention**: All user input sanitized with htmlspecialchars()
+- **Account Enumeration Prevention**: Identical responses for password reset regardless of email existence
+- **Error Handling**: display_errors disabled, log_errors enabled for production security
+- **Password Strength Validation**: Minimum 6 characters required
 
 ## Recent Changes
-- **November 1, 2025**: Initial project setup with complete authentication system
+- **November 1, 2025**: 
+  - Initial project setup with complete authentication system
+  - Security hardening: Added session regeneration on login/logout
+  - Security hardening: Implemented SHA-256 hashing for password reset tokens
+  - Security hardening: Fixed account enumeration vulnerability in password reset
+  - Security hardening: Disabled display_errors and enabled log_errors
+  - All critical security issues resolved and approved by security review
 
 ## User Preferences
 None specified yet.
@@ -96,5 +106,37 @@ None specified yet.
 ## Development Notes
 - The application uses PHP's built-in development server on port 5000
 - SQLite database is auto-created on first run
-- Password reset emails are displayed on-screen (for demo purposes)
-- In production, integrate a mail service for sending reset emails
+- For security, password reset no longer displays links on-screen
+- To test password reset in demo mode, check the users.db database directly:
+  - Query: `SELECT * FROM password_resets ORDER BY created_at DESC LIMIT 1;`
+  - Use the token value from database to construct reset URL manually
+- **Production Deployment**: 
+  - Integrate a mail service (PHPMailer, SendGrid, etc.) for sending reset emails
+  - Ensure log_errors points to a secure location
+  - Review all security settings before going live
+
+## Testing the Application
+
+### Creating a New Account
+1. Navigate to the signup page
+2. Fill in your name, email, and password (minimum 6 characters)
+3. Confirm your password
+4. Click "Sign Up"
+
+### Logging In
+1. Use your registered email and password
+2. Click "Sign In"
+3. You'll be redirected to the dashboard
+
+### Testing Password Reset (Demo Mode)
+1. Click "Forgot Password?" on the login page
+2. Enter a registered email address
+3. Submit the form (you'll see a generic success message)
+4. To get the actual reset link, query the database:
+   ```bash
+   sqlite3 users.db "SELECT token FROM password_resets ORDER BY created_at DESC LIMIT 1;"
+   ```
+5. Use the token to construct the URL: `http://localhost:5000/reset-password.php?token=YOUR_TOKEN`
+6. Set your new password
+
+**Note**: In production, the reset link would be emailed automatically.

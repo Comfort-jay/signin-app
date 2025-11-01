@@ -29,6 +29,7 @@ function loginUser($email, $password) {
     $user = $stmt->fetch(PDO::FETCH_ASSOC);
     
     if ($user && password_verify($password, $user['password'])) {
+        session_regenerate_id(true);
         $_SESSION['user_id'] = $user['id'];
         $_SESSION['user_email'] = $user['email'];
         $_SESSION['user_name'] = $user['name'];
@@ -50,6 +51,7 @@ function requireLogin() {
 }
 
 function logout() {
+    session_regenerate_id(true);
     session_destroy();
     header('Location: index.php');
     exit;
@@ -60,27 +62,31 @@ function createPasswordResetToken($email) {
     
     $stmt = $db->prepare("SELECT id FROM users WHERE email = ?");
     $stmt->execute([$email]);
-    if (!$stmt->fetch()) {
-        return ['success' => false, 'message' => 'Email not found'];
+    $userExists = $stmt->fetch();
+    
+    if ($userExists) {
+        $token = bin2hex(random_bytes(32));
+        $tokenHash = hash('sha256', $token);
+        $expiresAt = date('Y-m-d H:i:s', strtotime('+1 hour'));
+        
+        $stmt = $db->prepare("DELETE FROM password_resets WHERE email = ?");
+        $stmt->execute([$email]);
+        
+        $stmt = $db->prepare("INSERT INTO password_resets (email, token, expires_at) VALUES (?, ?, ?)");
+        $stmt->execute([$email, $tokenHash, $expiresAt]);
+        
+        return ['success' => true, 'token' => $token, 'message' => 'Password reset instructions sent'];
     }
     
-    $token = bin2hex(random_bytes(32));
-    $expiresAt = date('Y-m-d H:i:s', strtotime('+1 hour'));
-    
-    $stmt = $db->prepare("DELETE FROM password_resets WHERE email = ?");
-    $stmt->execute([$email]);
-    
-    $stmt = $db->prepare("INSERT INTO password_resets (email, token, expires_at) VALUES (?, ?, ?)");
-    $stmt->execute([$email, $token, $expiresAt]);
-    
-    return ['success' => true, 'token' => $token, 'message' => 'Password reset token created'];
+    return ['success' => true, 'token' => null, 'message' => 'Password reset instructions sent'];
 }
 
 function verifyResetToken($token) {
     $db = getDBConnection();
+    $tokenHash = hash('sha256', $token);
     
     $stmt = $db->prepare("SELECT email, expires_at FROM password_resets WHERE token = ?");
-    $stmt->execute([$token]);
+    $stmt->execute([$tokenHash]);
     $reset = $stmt->fetch(PDO::FETCH_ASSOC);
     
     if (!$reset) {

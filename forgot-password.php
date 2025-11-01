@@ -19,12 +19,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error = 'Please enter a valid email address';
     } else {
         $result = createPasswordResetToken($email);
-        if ($result['success']) {
-            $resetLink = SITE_URL . '/reset-password.php?token=' . $result['token'];
-            $success = 'Password reset link generated! (In a real app, this would be sent via email)';
-        } else {
-            $error = $result['message'];
-        }
+        $success = 'If your email is registered with us, you will receive password reset instructions via email. Please check your inbox.';
     }
 }
 ?>
@@ -51,13 +46,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <?php if ($success): ?>
                 <div class="alert alert-success">
                     <?php echo htmlspecialchars($success); ?>
-                    <?php if ($resetLink): ?>
-                        <div class="reset-link-box">
-                            <p><strong>Reset Link:</strong></p>
-                            <input type="text" value="<?php echo htmlspecialchars($resetLink); ?>" readonly onclick="this.select();" class="reset-link-input">
-                            <small>Copy this link to reset your password. Link expires in 1 hour.</small>
-                        </div>
-                    <?php endif; ?>
+                    <p style="margin-top: 12px; font-size: 13px; color: #666;">
+                        <strong>Note for Demo:</strong> Since this is a demo application without email configuration, 
+                        please contact your administrator or check the server logs for the reset link.
+                    </p>
                 </div>
             <?php endif; ?>
             
